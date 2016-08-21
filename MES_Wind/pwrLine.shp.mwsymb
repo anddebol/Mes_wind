@@ -1,0 +1,30 @@
+<MapWinGIS OcxVersion="4.8" FileType="LayerFile" FileVersion="0" Description="">
+  <Layer LayerType="Shapefile" LayerName="pwrLine" LayerVisible="1" LayerKey="" Filename="">
+    <ShapefileClass>
+      <DefaultDrawingOptions FillColor="16777215" LineColor="5148519">
+        <LinePatternClass Key="" Transparency="255">
+          <LineSegments>
+            <LineSegmentClass LineType="0" Color="5148519" MarkerOutlineColor="7895160" LineWidth="1.000000" MarkerSize="12.000000" MarkerInterval="16.000000" MarkerOffset="0.000000" LineStyle="0" Marker="2" MarkerOrientation="1" MarkerFlipFirst="-1" />
+          </LineSegments>
+        </LinePatternClass>
+      </DefaultDrawingOptions>
+      <ShapefileCategoriesClass>
+        <ShapefileCategoryClass Name="110kW" Expression="[Power] = 110">
+          <ShapeDrawingOptionsClass FillColor="16777215" LineColor="5148519">
+            <LinePatternClass Key="" Transparency="255">
+              <LineSegments>
+                <LineSegmentClass LineType="0" Color="5148519" MarkerOutlineColor="7895160" LineWidth="1.000000" MarkerSize="12.000000" MarkerInterval="16.000000" MarkerOffset="0.000000" LineStyle="0" Marker="2" MarkerOrientation="1" MarkerFlipFirst="-1" />
+              </LineSegments>
+            </LinePatternClass>
+          </ShapeDrawingOptionsClass>
+        </ShapefileCategoryClass>
+        <ShapefileCategoryClass Name="35kW" Expression="[Power] = 35">
+          <ShapeDrawingOptionsClass FillColor="16777215" LineColor="10040879" />
+        </ShapefileCategoryClass>
+      </ShapefileCategoriesClass>
+      <LabelsClass Generated="0" AvoidCollisions="0" Positioning="6" TextRenderingHint="5" />
+      <ChartsClass />
+      <Selection TotalCount="3" SelectedCount="1">010</Selection>
+    </ShapefileClass>
+  </Layer>
+</MapWinGIS>
