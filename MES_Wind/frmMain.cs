@@ -99,12 +99,38 @@ namespace MES_Wind
                     return;
                 }
                 pwlLayer = map1.GetLineLayers()[0];
-                //Now we get the Feature set for the lines
-                IFeatureSet featureSet = pwlLayer.DataSet;
-                IList<Coordinate> coordinateList = featureSet.Features[0].Coordinates;
+                //copy line layer FeatureSet
+                IFeatureSet pwlineSet = pwlLayer.DataSet;
+                // new FeatureSet for resulting broken powerlines
+                IFeatureSet brklineSet = new FeatureSet(FeatureType.Line);
+                DataTable dt = pwlineSet.DataTable;
+                foreach (IFeature feature in pwlineSet.Features)
+                {
+
+                    LineString linestr = feature.BasicGeometry as LineString;
+                    if (linestr != null)
+                    { // case if powerline consists of one line
+                        // get coordinates list
+                        IList<Coordinate> points = linestr.Coordinates;
+                        IFeature brklineFeature = brklineSet.AddFeature(linestr);
+                        brklineFeature.CopyAttributes(feature);
+                    }
+                    else
+                    {//case if powerline is multiline
+                        MultiLineString multiline = feature.BasicGeometry as MultiLineString;
+                        if ( multiline != null){ 
+                            foreach (IGeometry line in multiline.Geometries)
+                            {
+                                IList<Coordinate> points = line.Coordinates;
+                            }
+                            IFeature brklineFeature = brklineSet.AddFeature(multiline);
+                            MessageBox.Show("Works");
+                        }
 
 
-
+                    }
+                }
+               
 
             }
             catch (Exception ex)
