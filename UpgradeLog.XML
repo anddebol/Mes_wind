@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="MES_Wind">
+</Property><Property Name="Файл решения" Value="C:\Users\Geophyslab-laptop\Documents\Mes_wind\MES_Wind.sln">
+</Property><Property Name="Date" Value="25 августа 2016 г.">
+</Property><Property Name="Time" Value="1:08">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="MES_Wind.sln" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind.sln">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\MES_Wind.csproj" Description="Успешно создана резервная копия файла проекта: C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\MES_Wind.csproj">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\frmGraph.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\frmGraph.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\frmGraph.Designer.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\frmGraph.Designer.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\frmMain.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\frmMain.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\frmMain.Designer.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\frmMain.Designer.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\Program.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\Program.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\Properties\AssemblyInfo.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\Properties\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\Properties\Resources.Designer.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\Properties\Resources.Designer.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\Properties\Settings.Designer.cs" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\Properties\Settings.Designer.cs">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\Properties\Settings.settings" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\Properties\Settings.settings">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\frmGraph.resx" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\frmGraph.resx">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\frmMain.resx" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\frmMain.resx">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\Properties\Resources.resx" Description="Успешно создана резервная копия файла C:\Users\Geophyslab-laptop\Documents\Mes_wind\Backup\MES_Wind\Properties\Resources.resx">
+</Event><Event ErrorLevel="0" Project="MES_Wind" Source="MES_Wind\MES_Wind.csproj" Description="Файл проекта не нуждается в преобразовании.">
+</Event><Event ErrorLevel="3" Project="MES_Wind" Source="MES_Wind\MES_Wind.csproj" Description="Преобразование не требуется">
+</Event><Event ErrorLevel="0" Project="" Source="MES_Wind.sln" Description="Преобразование решения успешно завершено">
+</Event><Event ErrorLevel="3" Project="" Source="MES_Wind.sln" Description="Converted">
+</Event></UpgradeLog>
