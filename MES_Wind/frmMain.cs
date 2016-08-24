@@ -49,13 +49,14 @@ namespace MES_Wind
         /// <returns>List of booleans with coordinates if any of them are true, line is broken</returns>
         /// <remarks></remarks>
 #endregion
-        public List<CheckPoint> CalcBrkPoint(double startX, double startY, double endX, double endY, double dThreshold, IMapRasterLayer Uwind_raster, IMapRasterLayer Vwind_raster)
+        public List<CheckPoint> CalcBrkPoint(double startX, double startY, double endX, double endY, double dThreshold, IMapRasterLayer Uwind_raster, IMapRasterLayer Vwind_raster, IMapRasterLayer clim_layer, double h)
         {
             List<CheckPoint> lineCheckPoint = new List<CheckPoint>();
             double uwind = 0;
             double vwind = 0;
             double umod = 0;
-            double anglewind = 0;
+            double sinwind = 0;
+            double climwind = 0;
             double distance = Math.Sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
             double distpropD = distance / dThreshold;
             int distpropI = Convert.ToInt32(distpropD);
@@ -83,11 +84,37 @@ namespace MES_Wind
                     uwind = Uwind_raster.DataSet.Value[rowColumnU.Row, rowColumnU.Column];
                     RcIndex rowColumnV = Vwind_raster.DataSet.Bounds.ProjToCell(coords);
                     vwind = Vwind_raster.DataSet.Value[rowColumnV.Row, rowColumnV.Column];
+                    RcIndex rowColumnC = Vwind_raster.DataSet.Bounds.ProjToCell(coords);
+                    climwind = Vwind_raster.DataSet.Value[rowColumnC.Row, rowColumnC.Column];
                     umod = Math.Sqrt(uwind*uwind + vwind*vwind);
-                    anglewind = Math.Atan2(uwind,vwind);
+                    sinwind = Math.Sin(Math.Atan2(uwind,vwind));
+                    double C_height = 1.0;
+                    if (umod < 20)
+                    { //wind is too low 
+                        chkpnt.Ifbroken = false;
+                    }
+                    else
+                    {    // calculate prognostic and threshold windstress
+                        double p1 = -0.00078501;
+                        double p2 = 0.13431;
+                        double p3 = -2.11112;
+                        double p4 = 19.548;
+                        double qpr = p1 * umod * umod * umod + p2 * umod * umod + p3 * umod + p4;
+                        double qcl = p1 * climwind * climwind * climwind + p2 * climwind * climwind + p3 * climwind + p4;
+                        double Ppr = qpr * C_height * sinwind * sinwind;
+                        double Pcl = qcl * C_height * 1.0;
+                        if (Ppr >= Pcl)
+                        {
+                            chkpnt.Ifbroken = true;
+                        }
+                        else
+                        {
+                            chkpnt.Ifbroken = false;
+                        }
+                    }
                     chkpnt.X = curX;
                     chkpnt.Y = curY;
-                    chkpnt.Ifbroken = false;
+                   
                     lineCheckPoint.Add(chkpnt);
                 }
             }
@@ -148,6 +175,8 @@ namespace MES_Wind
                 //extract prognostic u layer
                 IMapRasterLayer u_rasterLayer = default(IMapRasterLayer);
                 IMapRasterLayer v_rasterLayer = default(IMapRasterLayer);
+                IMapRasterLayer clim5_rasterLayer = default(IMapRasterLayer);
+                IMapRasterLayer clim10_rasterLayer = default(IMapRasterLayer);
                 if (map1.GetRasterLayers().Count() == 1)
                 {
                     MessageBox.Show("Please add a raster layer");
@@ -157,6 +186,8 @@ namespace MES_Wind
                 //use the first raster layer in the map
                 u_rasterLayer = map1.GetRasterLayers()[0];
                 v_rasterLayer = map1.GetRasterLayers()[1];
+                clim5_rasterLayer = map1.GetRasterLayers()[3];
+                clim10_rasterLayer = map1.GetRasterLayers()[4];
 
                 //get the powerline  line layer
                 IMapLineLayer pwlLayer = default(IMapLineLayer);
@@ -186,6 +217,7 @@ namespace MES_Wind
                         int id = int.Parse(featureData["PW_ID"].ToString());
                         int year = int.Parse(featureData["Year"].ToString());
                         double height = double.Parse(featureData["height"].ToString());
+                        int power = int.Parse(featureData["Year"].ToString());
                         // cycle throw all points in line
                         for (int i=1; i< points.Count; i++)
                         {
@@ -194,7 +226,14 @@ namespace MES_Wind
                             double y1 = points[i - 1].Y;
                             double x2 = points[i].X;
                             double y2 = points[i].Y;
-                            segmentCheckList = CalcBrkPoint(x1,y1,x2,y2,distThreshold,u_rasterLayer,v_rasterLayer);
+                            if (power > 5 && power <330)
+                            {
+                                segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim10_rasterLayer, height);
+                            }
+                            else
+                            {
+                                segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim5_rasterLayer, height);
+                            }
                             lineCheckList.AddRange(segmentCheckList);
                         }
 
