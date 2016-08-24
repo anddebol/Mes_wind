@@ -185,6 +185,7 @@ namespace MES_Wind
                         DataRow featureData = feature.DataRow;
                         int id = int.Parse(featureData["PW_ID"].ToString());
                         int year = int.Parse(featureData["Year"].ToString());
+                        double height = double.Parse(featureData["height"].ToString());
                         // cycle throw all points in line
                         for (int i=1; i< points.Count; i++)
                         {
