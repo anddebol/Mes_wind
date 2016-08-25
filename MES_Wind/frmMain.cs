@@ -56,6 +56,8 @@ namespace MES_Wind
             double vwind = 0;
             double umod = 0;
             double sinwind = 0;
+            double anglewind = 0;
+            double angleline = Math.Atan2((endY - startY),(endX - startX));
             double climwind = 0;
             double distance = Math.Sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
             double distpropD = distance / dThreshold;
@@ -80,14 +82,12 @@ namespace MES_Wind
                         curY = curY + constYdiff;
                     }
                     Coordinate coords = new Coordinate(curX,curY);
-                    RcIndex rowColumnU = Uwind_raster.DataSet.Bounds.ProjToCell(coords);
-                    uwind = Uwind_raster.DataSet.Value[rowColumnU.Row, rowColumnU.Column];
-                    RcIndex rowColumnV = Vwind_raster.DataSet.Bounds.ProjToCell(coords);
-                    vwind = Vwind_raster.DataSet.Value[rowColumnV.Row, rowColumnV.Column];
-                    RcIndex rowColumnC = Vwind_raster.DataSet.Bounds.ProjToCell(coords);
-                    climwind = Vwind_raster.DataSet.Value[rowColumnC.Row, rowColumnC.Column];
+                    uwind = interpol(coords, Uwind_raster);
+                    vwind = interpol(coords, Vwind_raster);
+                    climwind = interpol(coords, clim_layer);
                     umod = Math.Sqrt(uwind*uwind + vwind*vwind);
-                    sinwind = Math.Sin(Math.Atan2(uwind,vwind));
+                    anglewind = Math.Atan2(vwind,uwind) - angleline;
+                    sinwind = Math.Sin(anglewind);
                     double C_height = 1.0;
                     if (umod < 20)
                     { //wind is too low 
@@ -118,9 +118,25 @@ namespace MES_Wind
                     lineCheckPoint.Add(chkpnt);
                 }
             }
+            else
+            {
+                 
+            }
             return lineCheckPoint;
         }
-
+        public IFeatureSet brokenpoints(List<CheckPoint> chklist)
+        {
+            IFeatureSet points = new FeatureSet(FeatureType.Point);
+            Coordinate chkcords = new Coordinate();
+            return points;
+        }
+        public double interpol(Coordinate coords, IMapRasterLayer raster)
+        {
+         double rval = 0;
+            RcIndex rc= raster.DataSet.Bounds.ProjToCell(coords);
+            rval = raster.DataSet.Value[rc.Row, rc.Column];
+         return  rval;
+        }
 
         private void bntLoadWindX_Click(object sender, EventArgs e)
         {
@@ -131,7 +147,15 @@ namespace MES_Wind
 
         private void btnLoadWindY_Click(object sender, EventArgs e)
         {
-            map1.AddLayer();
+            string curDir = Environment.CurrentDirectory;
+            string path_to_tests = "\\MES_test\\";
+            string file_path = curDir + path_to_tests;
+
+            map1.AddLayer(file_path+"u_test.asc");
+            map1.AddLayer(file_path + "v_test.asc");
+            map1.AddLayer(file_path + "clim5_test.asc");
+            map1.AddLayer(file_path + "clim10_test.asc");
+            map1.AddLayer(file_path + "powerlines.shp");
             map1.ZoomToMaxExtent();
         }
 
@@ -200,8 +224,8 @@ namespace MES_Wind
                 //copy line layer FeatureSet
                 IFeatureSet pwlineSet = pwlLayer.DataSet;
                 // new FeatureSet for resulting broken powerlines
-                IFeatureSet brklineSet = new FeatureSet(FeatureType.Line);
-                DataTable dt = pwlineSet.DataTable;
+                //IFeatureSet brklineSet = new FeatureSet(FeatureType.Line);
+                //DataTable dt = pwlineSet.DataTable;
                 List<CheckPoint> fullCheckList = new List<CheckPoint>();
                 foreach (IFeature feature in pwlineSet.Features)
                 {
@@ -210,14 +234,14 @@ namespace MES_Wind
                     DataRow featureData = feature.DataRow;
                     int id = int.Parse(featureData["PW_ID"].ToString());
                     int year = int.Parse(featureData["Year"].ToString());
-                    double height = double.Parse(featureData["height"].ToString());
+                    double height = double.Parse(featureData["height_m"].ToString());
                     int power = int.Parse(featureData["Power"].ToString());
                     LineString linestr = feature.BasicGeometry as LineString;
                     if (linestr != null)
                     { // case if powerline consists of one line
                         // get coordinates list
                         IList<Coordinate> points = linestr.Coordinates;
-                        IFeature brklineFeature = brklineSet.AddFeature(linestr);
+                        
 
                         // cycle throw all points in line
                         for (int i=1; i< points.Count; i++)
@@ -239,17 +263,38 @@ namespace MES_Wind
                         }
 
                         fullCheckList.AddRange(lineCheckList);
-                        brklineFeature.CopyAttributes(feature);
+                        
                     }
                     else
                     {//case if powerline is multiline
                         MultiLineString multiline = feature.BasicGeometry as MultiLineString;
-                        if ( multiline != null){ 
+                        if ( multiline != null){
+                            
                             foreach (IGeometry line in multiline.Geometries)
                             {
                                 IList<Coordinate> points = line.Coordinates;
+                                for (int i = 1; i < points.Count; i++)
+                                {
+                                    List<CheckPoint> segmentCheckList = new List<CheckPoint>();
+                                    double x1 = points[i - 1].X;
+                                    double y1 = points[i - 1].Y;
+                                    double x2 = points[i].X;
+                                    double y2 = points[i].Y;
+                                    if (power > 5 && power < 330)
+                                    {
+                                        segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim10_rasterLayer, height);
+                                    }
+                                    else
+                                    {
+                                        segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim5_rasterLayer, height);
+                                    }
+                                    lineCheckList.AddRange(segmentCheckList);
+                                }
+
+                                fullCheckList.AddRange(lineCheckList);
+
                             }
-                            IFeature brklineFeature = brklineSet.AddFeature(multiline);
+                            
                             MessageBox.Show("Works");
                         }
 

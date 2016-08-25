@@ -214,7 +214,7 @@
             this.btnLoadWindY.Name = "btnLoadWindY";
             this.btnLoadWindY.Size = new System.Drawing.Size(96, 46);
             this.btnLoadWindY.TabIndex = 3;
-            this.btnLoadWindY.Text = "Load Ywind";
+            this.btnLoadWindY.Text = "Load test files";
             this.btnLoadWindY.UseVisualStyleBackColor = true;
             this.btnLoadWindY.Click += new System.EventHandler(this.btnLoadWindY_Click);
             // 
