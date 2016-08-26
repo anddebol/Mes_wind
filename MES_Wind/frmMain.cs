@@ -186,8 +186,8 @@ namespace MES_Wind
                 //use the first raster layer in the map
                 u_rasterLayer = map1.GetRasterLayers()[0];
                 v_rasterLayer = map1.GetRasterLayers()[1];
-                clim5_rasterLayer = map1.GetRasterLayers()[3];
-                clim10_rasterLayer = map1.GetRasterLayers()[4];
+                clim5_rasterLayer = map1.GetRasterLayers()[2];
+                clim10_rasterLayer = map1.GetRasterLayers()[3];
 
                 //get the powerline  line layer
                 IMapLineLayer pwlLayer = default(IMapLineLayer);
@@ -206,18 +206,19 @@ namespace MES_Wind
                 foreach (IFeature feature in pwlineSet.Features)
                 {
                     List<CheckPoint> lineCheckList = new List<CheckPoint>();
+                    //get associated attributes
+                    DataRow featureData = feature.DataRow;
+                    int id = int.Parse(featureData["PW_ID"].ToString());
+                    int year = int.Parse(featureData["Year"].ToString());
+                    double height = double.Parse(featureData["height"].ToString());
+                    int power = int.Parse(featureData["Power"].ToString());
                     LineString linestr = feature.BasicGeometry as LineString;
                     if (linestr != null)
                     { // case if powerline consists of one line
                         // get coordinates list
                         IList<Coordinate> points = linestr.Coordinates;
                         IFeature brklineFeature = brklineSet.AddFeature(linestr);
-                        //get associated attributes
-                        DataRow featureData = feature.DataRow;
-                        int id = int.Parse(featureData["PW_ID"].ToString());
-                        int year = int.Parse(featureData["Year"].ToString());
-                        double height = double.Parse(featureData["height"].ToString());
-                        int power = int.Parse(featureData["Year"].ToString());
+
                         // cycle throw all points in line
                         for (int i=1; i< points.Count; i++)
                         {
