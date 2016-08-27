@@ -132,10 +132,55 @@ namespace MES_Wind
         }
         public double interpol(Coordinate coords, IMapRasterLayer raster)
         {
-         double rval = 0;
-            RcIndex rc= raster.DataSet.Bounds.ProjToCell(coords);
-            rval = raster.DataSet.Value[rc.Row, rc.Column];
-         return  rval;
+            const bool normalX = true;
+            const bool normalY = false;
+            RcIndex rc = raster.DataSet.Bounds.ProjToCell(coords);
+            Coordinate center = raster.DataSet.Bounds.CellCenter_ToProj(rc.Row, rc.Column);
+            double xDiff = coords.X - center.X;
+            double yDiff = coords.Y - center.Y;
+            //calculate second index
+            int row2, col2;
+            if ((xDiff >= 0 && normalX ) || (!normalX && xDiff < 0))
+            {
+                row2 = rc.Row >= raster.DataSet.EndRow ? rc.Row - 1 : rc.Row + 1;
+            }
+            else
+            {
+                row2 = rc.Row > 0 ? rc.Row - 1 : rc.Row + 1;
+            }
+            if ( (yDiff >= 0 && normalY) || (!normalY && yDiff < 0))
+            {
+                col2 = rc.Column >= raster.DataSet.EndColumn ? rc.Column - 1 : rc.Column + 1;
+            }
+            else
+            {
+                col2 = rc.Column > 0 ? rc.Column - 1 : rc.Column + 1;
+            }
+            // indexes and values at bounds
+            RcIndex rcBotLeft  = new RcIndex(Math.Min(row2, rc.Row), Math.Min(col2, rc.Column));
+            RcIndex rcBotRight = new RcIndex(Math.Max(row2, rc.Row), Math.Min(col2, rc.Column));
+            RcIndex rcTopLeft  = new RcIndex(Math.Min(row2, rc.Row), Math.Max(col2, rc.Column));
+            RcIndex rcTopRight = new RcIndex(Math.Max(row2, rc.Row), Math.Max(col2, rc.Column));
+            double valBotLeft  = raster.DataSet.Value[rcBotLeft.Row, rcBotLeft.Column];
+            double valBotRight = raster.DataSet.Value[rcBotRight.Row, rcBotRight.Column];
+            double valTopLeft  = raster.DataSet.Value[rcTopLeft.Row, rcTopLeft.Column];
+            double valTopRight = raster.DataSet.Value[rcTopRight.Row, rcTopRight.Column];
+            Coordinate origin = raster.DataSet.CellToProj(rcBotLeft.Row, rcBotLeft.Column);
+            //Coordinate last = raster.DataSet.CellToProj(rcTopRight.Row, rcTopRight.Column);//test only
+            // sizes for cell
+            double hx = raster.DataSet.Bounds.CellWidth;
+            double hy = raster.DataSet.Bounds.CellHeight;
+            // coefficients
+            double px = (coords.X - origin.X) / hx;
+            double py = (coords.Y - origin.Y) / hy;
+            // inverse directions
+            px *= normalX ? 1 : -1;
+            py *= normalY ? 1 : -1;
+            // interpolation
+            double top = (1 - px) * valTopLeft + px * valTopRight;
+            double bot = (1 - px) * valBotLeft + px * valBotRight;
+            double rval = (1 - py) * bot + py * top;
+            return rval;
         }
 
         private void bntLoadWindX_Click(object sender, EventArgs e)
