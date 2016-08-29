@@ -11,6 +11,7 @@ using DotSpatial.Controls;
 using DotSpatial.Topology;
 using DotSpatial.Serialization;
 using DotSpatial.Data;
+using DotSpatial.Symbology;
 
 
 
@@ -130,6 +131,109 @@ namespace MES_Wind
             Coordinate chkcords = new Coordinate();
             return points;
         }
+        public IFeatureSet main_layer_function(IMapLineLayer pwlines, IFeatureSet pwlineSet, IMapRasterLayer u_raster,
+            IMapRasterLayer v_raster, IMapRasterLayer clim10_raster, IMapRasterLayer clim5_raster)
+        {
+            IFeatureSet result_layer = new FeatureSet(FeatureType.Line);
+            List<CheckPoint> fullCheckList = new List<CheckPoint>();
+            foreach (IFeature feature in pwlineSet.Features)
+            {
+                List<CheckPoint> lineCheckList = new List<CheckPoint>();
+                //get associated attributes
+                DataRow featureData = feature.DataRow;
+                int id = int.Parse(featureData["PW_ID"].ToString());
+                int year = int.Parse(featureData["Year"].ToString());
+                double height = double.Parse(featureData["height_m"].ToString());
+                int power = int.Parse(featureData["Power"].ToString());
+                LineString linestr = feature.BasicGeometry as LineString;
+                if (linestr != null)
+                { // case if powerline consists of one line
+                  // get coordinates list
+                    IList<Coordinate> points = linestr.Coordinates;
+
+
+                    // cycle throw all points in line
+                    for (int i = 1; i < points.Count; i++)
+                    {
+                        List<CheckPoint> segmentCheckList = new List<CheckPoint>();
+                        double x1 = points[i - 1].X;
+                        double y1 = points[i - 1].Y;
+                        double x2 = points[i].X;
+                        double y2 = points[i].Y;
+                        if (power > 5 && power < 330)
+                        {
+                            segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_raster, v_raster, clim10_raster, height);
+                        }
+                        else
+                        {
+                            segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_raster, v_raster, clim5_raster, height);
+                        }
+                        lineCheckList.AddRange(segmentCheckList);
+                    }
+                    bool linechek = false;
+                    foreach (CheckPoint chkpnt in lineCheckList)
+                    {
+                        if (chkpnt.Ifbroken == true)
+                        { linechek = true; }
+                    }
+                    if (linechek == true)
+                    {
+                        IFeature lineFeature = result_layer.AddFeature(linestr);
+                    }
+                    fullCheckList.AddRange(lineCheckList);
+
+                }
+                else
+                {//case if powerline is multiline
+                    MultiLineString multiline = feature.BasicGeometry as MultiLineString;
+                    if (multiline != null)
+                    {
+
+                        foreach (IGeometry line in multiline.Geometries)
+                        {
+                            IList<Coordinate> points = line.Coordinates;
+                            for (int i = 1; i < points.Count; i++)
+                            {
+                                List<CheckPoint> segmentCheckList = new List<CheckPoint>();
+                                double x1 = points[i - 1].X;
+                                double y1 = points[i - 1].Y;
+                                double x2 = points[i].X;
+                                double y2 = points[i].Y;
+                                if (power > 5 && power < 330)
+                                {
+                                    segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_raster, v_raster, clim10_raster, height);
+                                }
+                                else
+                                {
+                                    segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_raster, v_raster, clim5_raster, height);
+                                }
+                                bool linechek = false;
+                                foreach (CheckPoint chkpnt in lineCheckList)
+                                {
+                                    if (chkpnt.Ifbroken == true)
+                                    { linechek = true; }
+                                }
+                                if (linechek == true)
+                                {
+                                    IFeature lineFeature = result_layer.AddFeature(linestr);
+                                }
+                                lineCheckList.AddRange(segmentCheckList);
+                            }
+
+
+                            fullCheckList.AddRange(lineCheckList);
+
+                        }
+
+                        MessageBox.Show("Works");
+                    }
+
+
+                }
+            }
+
+            return result_layer;
+        }
         public double interpol(Coordinate coords, IMapRasterLayer raster)
         {
             const bool normalX = true;
@@ -201,6 +305,7 @@ namespace MES_Wind
             map1.AddLayer(file_path + "clim5_test.asc");
             map1.AddLayer(file_path + "clim10_test.asc");
             map1.AddLayer(file_path + "powerlines.shp");
+            map1.AddLayer(file_path + "powerstations.shp");
             map1.ZoomToMaxExtent();
         }
 
@@ -252,7 +357,7 @@ namespace MES_Wind
                     return;
                 }
 
-                //use the first raster layer in the map
+                //this makes raster layers list in map1 ordered!
                 u_rasterLayer = map1.GetRasterLayers()[0];
                 v_rasterLayer = map1.GetRasterLayers()[1];
                 clim5_rasterLayer = map1.GetRasterLayers()[2];
@@ -268,85 +373,20 @@ namespace MES_Wind
                 pwlLayer = map1.GetLineLayers()[0];
                 //copy line layer FeatureSet
                 IFeatureSet pwlineSet = pwlLayer.DataSet;
+                //get the powerstations layer 
+                IMapPointLayer pwstLayer = default(IMapPointLayer);
+                pwstLayer = map1.GetPointLayers()[0];
+
                 // new FeatureSet for resulting broken powerlines
                 //IFeatureSet brklineSet = new FeatureSet(FeatureType.Line);
                 //DataTable dt = pwlineSet.DataTable;
-                List<CheckPoint> fullCheckList = new List<CheckPoint>();
-                foreach (IFeature feature in pwlineSet.Features)
-                {
-                    List<CheckPoint> lineCheckList = new List<CheckPoint>();
-                    //get associated attributes
-                    DataRow featureData = feature.DataRow;
-                    int id = int.Parse(featureData["PW_ID"].ToString());
-                    int year = int.Parse(featureData["Year"].ToString());
-                    double height = double.Parse(featureData["height_m"].ToString());
-                    int power = int.Parse(featureData["Power"].ToString());
-                    LineString linestr = feature.BasicGeometry as LineString;
-                    if (linestr != null)
-                    { // case if powerline consists of one line
-                        // get coordinates list
-                        IList<Coordinate> points = linestr.Coordinates;
-                        
+                IFeatureSet brk_info = new FeatureSet(FeatureType.Line);
+                brk_info = main_layer_function(pwlLayer, pwlineSet, u_rasterLayer, v_rasterLayer, clim10_rasterLayer, clim5_rasterLayer);
 
-                        // cycle throw all points in line
-                        for (int i=1; i< points.Count; i++)
-                        {
-                            List<CheckPoint> segmentCheckList = new List<CheckPoint>();
-                            double x1 = points[i - 1].X;
-                            double y1 = points[i - 1].Y;
-                            double x2 = points[i].X;
-                            double y2 = points[i].Y;
-                            if (power > 5 && power <330)
-                            {
-                                segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim10_rasterLayer, height);
-                            }
-                            else
-                            {
-                                segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim5_rasterLayer, height);
-                            }
-                            lineCheckList.AddRange(segmentCheckList);
-                        }
-
-                        fullCheckList.AddRange(lineCheckList);
-                        
-                    }
-                    else
-                    {//case if powerline is multiline
-                        MultiLineString multiline = feature.BasicGeometry as MultiLineString;
-                        if ( multiline != null){
-                            
-                            foreach (IGeometry line in multiline.Geometries)
-                            {
-                                IList<Coordinate> points = line.Coordinates;
-                                for (int i = 1; i < points.Count; i++)
-                                {
-                                    List<CheckPoint> segmentCheckList = new List<CheckPoint>();
-                                    double x1 = points[i - 1].X;
-                                    double y1 = points[i - 1].Y;
-                                    double x2 = points[i].X;
-                                    double y2 = points[i].Y;
-                                    if (power > 5 && power < 330)
-                                    {
-                                        segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim10_rasterLayer, height);
-                                    }
-                                    else
-                                    {
-                                        segmentCheckList = CalcBrkPoint(x1, y1, x2, y2, distThreshold, u_rasterLayer, v_rasterLayer, clim5_rasterLayer, height);
-                                    }
-                                    lineCheckList.AddRange(segmentCheckList);
-                                }
-
-                                fullCheckList.AddRange(lineCheckList);
-
-                            }
-                            
-                            MessageBox.Show("Works");
-                        }
-
-
-                    }
-                }
-               
+                IMapLineLayer brk_info_layer = (MapLineLayer)map1.Layers.Add(brk_info);
+                LineSymbolizer symbol = new LineSymbolizer(Color.Red, 3);
+                brk_info_layer.Symbolizer = symbol;
+                brk_info_layer.LegendText = "Broken powerlines";
 
             }
             catch (Exception ex)
